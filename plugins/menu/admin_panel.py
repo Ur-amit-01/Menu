@@ -55,8 +55,7 @@ def _content_controls(count: int) -> InlineKeyboardMarkup:
 
 
 def _button_label(node: dict) -> str:
-    icon = "📁" if node["type"] == "menu" else "📄"
-    return f"{icon} {node['label']}"
+    return node["label"]
 
 
 async def _render_menu_screen(node: dict):
@@ -408,3 +407,4 @@ async def handle_label_reply(client, message: Message):
     else:
         await message.reply_text(f"✅ Content item <b>{label}</b> created.")
         await _begin_content_collection(client, message.chat.id, admin_id, str(new_id))
+      
