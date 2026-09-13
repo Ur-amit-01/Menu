@@ -26,3 +26,4 @@ async def deliver_node_messages(client, chat_id: int, messages: list) -> list:
     except Exception as e:
         logger.info(f"Menu content copy failed, falling back to re-upload: {e}")
         return await _reupload(client, chat_id, messages, protect_content)
+        
