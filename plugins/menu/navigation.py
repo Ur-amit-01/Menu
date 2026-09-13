@@ -30,19 +30,32 @@ _RESERVED = {BACK_LABEL, MAIN_MENU_LABEL}
 
 
 def _button_text(node: dict) -> str:
-    icon = "📁" if node["type"] == "menu" else "📄"
-    return f"{icon} {node['label']}"
+    return node["label"]
+
+
+def _pack_rows(labels: list, max_row_width: int = 26, max_per_row: int = 3) -> list:
+    """Greedy width-aware packing, order preserved: keeps adding labels to
+    the current row until the next one would push the row past
+    max_row_width (character-count estimate) or hit max_per_row, then
+    starts a new row. This is why short labels ("NEET") end up two/three
+    to a row while long ones ("Complete 12th Part - 2 Notes") get a row
+    to themselves instead of being squeezed and wrapped."""
+    rows, row, row_width = [], [], 0
+    for label in labels:
+        added_width = len(label) + (2 if row else 0)  # +2 ~ gap between buttons
+        if row and (row_width + added_width > max_row_width or len(row) >= max_per_row):
+            rows.append(row)
+            row, row_width = [], 0
+        row.append(label)
+        row_width += added_width
+    if row:
+        rows.append(row)
+    return rows
 
 
 def build_keyboard(children: list, at_root: bool) -> ReplyKeyboardMarkup:
-    rows, row = [], []
-    for child in children:
-        row.append(KeyboardButton(_button_text(child)))
-        if len(row) == 2:
-            rows.append(row)
-            row = []
-    if row:
-        rows.append(row)
+    labels = [_button_text(c) for c in children]
+    rows = [[KeyboardButton(t) for t in row] for row in _pack_rows(labels)]
 
     nav_row = []
     if not at_root:
@@ -149,3 +162,4 @@ async def handle_menu_text(client, message: Message):
         sent = await deliver_node_messages(client, message.chat.id, match.get("messages", []))
         if not sent:
             await message.reply_text("⚠️ Nothing is stored here yet — ask an admin to add file(s).")
+            
